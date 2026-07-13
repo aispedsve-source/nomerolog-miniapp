@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover, user-scalable=no" />
+  <title>Нумеролог</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="app">
+    <header class="app-header">
+      <h1 class="app-title">✦ Нумеролог</h1>
+      <p class="app-subtitle" id="header-sub">Карта чисел по дате рождения</p>
+    </header>
+
+    <main id="screens">
+      <!-- КАРТА -->
+      <section class="screen is-active" data-screen="map">
+        <div class="field">
+          <label class="field-label" for="birth-input">Дата рождения</label>
+          <input class="field-input" id="birth-input" type="text" inputmode="numeric" placeholder="ДД.ММ.ГГГГ" autocomplete="off" maxlength="10" />
+          <p class="field-error" id="map-helper"></p>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="map-calc">Рассчитать карту</button>
+          <button class="btn btn-ghost btn-sm" id="map-save" style="display:none">Сохранить</button>
+        </div>
+        <div class="results" id="map-results"></div>
+      </section>
+
+      <!-- МИССИЯ -->
+      <section class="screen" data-screen="mission">
+        <h2 class="screen-title">Миссия и путь</h2>
+        <p class="screen-intro">Рассчитайте карту на вкладке «Карта», чтобы увидеть детальный разбор миссии, сферы и роста.</p>
+        <div class="results" id="mission-results"></div>
+      </section>
+
+      <!-- ГОД -->
+      <section class="screen" data-screen="year">
+        <h2 class="screen-title">Личный год</h2>
+        <p class="screen-intro">Рассчитайте карту, чтобы увидеть личный год, месяц и день.</p>
+        <div class="results" id="year-results"></div>
+      </section>
+
+      <!-- ЧИСЛА (справочник) -->
+      <section class="screen" data-screen="numbers">
+        <h2 class="screen-title">Числа</h2>
+        <p class="screen-intro">Справочник базовых энергий 1–9: числа сознания, сферы реализации и личные годы.</p>
+        <div class="results" id="numbers-results"></div>
+      </section>
+
+      <!-- ПРОФИЛИ -->
+      <section class="screen" data-screen="profiles">
+        <h2 class="screen-title">Профили</h2>
+        <p class="screen-intro">Сохранённые карты хранятся только на этом устройстве. Их можно открыть или удалить в любой момент.</p>
+        <div class="field">
+          <label class="field-label" for="prof-name">Имя профиля</label>
+          <input class="field-input" id="prof-name" type="text" placeholder="Себя, партнёра, друга или клиента" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label class="field-label" for="prof-date">Дата рождения</label>
+          <input class="field-input" id="prof-date" type="text" inputmode="numeric" placeholder="ДД.ММ.ГГГГ" autocomplete="off" maxlength="10" />
+          <p class="field-error" id="prof-error"></p>
+        </div>
+        <button class="btn btn-primary" id="prof-add">Добавить профиль</button>
+        <hr class="divider" />
+        <div id="prof-list"></div>
+      </section>
+
+      <!-- ЭКСТРА -->
+      <section class="screen" data-screen="extra">
+        <h2 class="screen-title">Экстра <span id="extra-badge"></span></h2>
+        <p class="screen-intro">Совместимость пары, глубокий разбор, карта семьи, прикладные расчёты и PDF-отчёты.</p>
+        <div id="extra-content"></div>
+      </section>
+    </main>
+
+    <p class="disclaimer">
+      Эзотерический инструмент для самопознания и развлечения. Не заменяет медицинскую,
+      психологическую, финансовую или юридическую консультацию.
+    </p>
+  </div>
+
+  <nav class="nav" id="nav">
+    <button class="nav-btn is-active" data-screen="map"><span class="ic">✦</span><span class="lb">Карта</span></button>
+    <button class="nav-btn" data-screen="mission"><span class="ic">◆</span><span class="lb">Миссия</span></button>
+    <button class="nav-btn" data-screen="year"><span class="ic">◐</span><span class="lb">Год</span></button>
+    <button class="nav-btn" data-screen="numbers"><span class="ic">☉</span><span class="lb">Числа</span></button>
+    <button class="nav-btn" data-screen="profiles"><span class="ic">◎</span><span class="lb">Проф.</span></button>
+    <button class="nav-btn" data-screen="extra"><span class="ic">♕</span><span class="lb">Экстра</span></button>
+  </nav>
+
+  <div class="toast" id="toast"></div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
