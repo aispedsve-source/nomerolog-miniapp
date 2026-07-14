@@ -6,6 +6,8 @@
 const tg = window.Telegram?.WebApp;
 
 export const isTelegram = !!tg;
+export const raw = tg;                    // доступ к initData/initDataUnsafe для ai.js
+export const initDataUnsafe = tg?.initDataUnsafe;
 
 export function initTelegram() {
   if (!tg) return;

@@ -9,8 +9,29 @@ import * as tg from './telegram.js';
 import { renderReport, sectionCard, el, esc, chipsHtml, toast } from './render.js';
 import { initExtra } from './extra.js';
 import { exportReportPdf } from './pdf.js';
+import { initAi } from './ai.js';
 
 tg.initTelegram();
+
+// Контекст карты для ИИ (числа уже посчитаны; ИИ ничего не пересчитывает)
+function aiContext() {
+  if (!state.currentBirth) return null;
+  const b = state.currentBirth;
+  const m = calculateMap(b);
+  const now = new Date();
+  return {
+    consciousness: m.consciousness,
+    consciousnessArchetype: DICT.numbers[m.consciousness]?.archetype,
+    mission: m.mission,
+    sphere: m.sphere,
+    personalYear: m.personalYear,
+    personalMonth: calculatePersonalMonth(b, now.getFullYear(), now.getMonth() + 1),
+    personalDay: calculatePersonalDay(b, now.getFullYear(), now.getMonth() + 1, now.getDate()),
+    birthDateLabel: store.birthDateLabel(b),
+    name: state.currentName || undefined,
+  };
+}
+const ai = initAi({ tg, getContext: aiContext });
 
 const state = {
   screen: 'map',
@@ -96,10 +117,21 @@ function promptName(title, def) {
   });
 }
 
-// Кнопки под личной картой: поделиться + PDF (PDF под премиумом, как в оригинале)
+// Кнопки под личной картой: объяснить (ИИ) + поделиться + PDF
 function personalActions(report) {
+  const container = el('div');
+  container.style.marginTop = '4px';
+
+  // ИИ: объяснить простыми словами
+  const explain = el('button', 'btn btn-primary', '🔮 Объяснить простыми словами');
+  explain.style.marginBottom = '10px';
+  explain.addEventListener('click', () => {
+    tg.haptic('light');
+    ai.open('Объясни мою карту простыми словами: что это значит для меня и с чего начать?');
+  });
+  container.appendChild(explain);
+
   const wrap = el('div', 'btn-row');
-  wrap.style.marginTop = '4px';
 
   const share = el('button', 'btn btn-ghost', '↗ Поделиться');
   share.addEventListener('click', () => {
@@ -124,7 +156,8 @@ function personalActions(report) {
     finally { pdf.disabled = false; pdf.textContent = '⤓ PDF'; }
   });
   wrap.appendChild(pdf);
-  return wrap;
+  container.appendChild(wrap);
+  return container;
 }
 
 function shareTextFromReport(report) {
