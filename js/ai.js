@@ -70,6 +70,20 @@ export function initAi({ tg, getContext }) {
   const inputEl = overlay.querySelector('#ai-input');
   const sendBtn = overlay.querySelector('#ai-send');
 
+  // Ссылки внутри чата: t.me → открыть в самом Telegram (а не веб-заглушку telegram.org)
+  messagesEl.addEventListener('click', e => {
+    const a = e.target.closest('a');
+    if (!a) return;
+    const href = a.getAttribute('href') || '';
+    if (/^https?:\/\/(t\.me|telegram\.me)\//i.test(href) || href.startsWith('tg://')) {
+      e.preventDefault();
+      tg?.openTelegramLink ? tg.openTelegramLink(href) : window.open(href, '_blank', 'noopener');
+    } else if (/^https?:\/\//i.test(href)) {
+      e.preventDefault();
+      tg?.openExternal ? tg.openExternal(href) : window.open(href, '_blank', 'noopener');
+    }
+  });
+
   function bubble(role, html, cls = '') {
     const b = document.createElement('div');
     b.className = `ai-msg ai-${role} ${cls}`;

@@ -54,6 +54,24 @@ export function hideBackButton() {
   backHandler = null;
 }
 
+// --- Открытие ссылок ---
+/** Телеграм-ссылка (t.me/...): открыть ВНУТРИ Telegram (прыжок в чат), а не в вебе. */
+export function openTelegramLink(url) {
+  try {
+    if (tg?.openTelegramLink) { tg.openTelegramLink(url); return true; }
+  } catch (_) {}
+  window.open(url, '_blank', 'noopener');
+  return false;
+}
+/** Обычная внешняя ссылка. */
+export function openExternal(url) {
+  try {
+    if (tg?.openLink) { tg.openLink(url); return true; }
+  } catch (_) {}
+  window.open(url, '_blank', 'noopener');
+  return false;
+}
+
 // --- Share ---
 export function shareText(text) {
   if (tg?.openTelegramLink) {
