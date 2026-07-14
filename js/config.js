@@ -6,7 +6,7 @@
  * Либо задай глобально: window.__NOMEROLOG_BACKEND__ = '...'
  */
 export const CONFIG = {
-  backendUrl: '',
+  backendUrl: 'https://nomerolog-ai.aispedsve.workers.dev',
 };
 
 /** Актуальный адрес бэкенда (CONFIG или глобальный override). */
