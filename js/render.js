@@ -25,11 +25,14 @@ function valuesHtml(values) {
 
 function bulletGroupsHtml(groups) {
   if (!groups || !groups.length) return '';
-  return groups.map(g => `
-    <div class="bullet-group">
-      ${g.title ? `<div class="bg-title">${esc(g.title)}</div>` : ''}
-      <ul>${(g.bullets || []).map(b => `<li>${esc(b)}</li>`).join('')}</ul>
-    </div>`).join('');
+  return groups.map(g => {
+    const head = g.title ? `<div class="bg-title">${esc(g.title)}</div>` : '';
+    if (g.chips) {
+      const cls = g.chips === 'shadow' ? 'chip shadow' : g.chips === 'gold' ? 'chip gold' : 'chip';
+      return `<div class="bullet-group">${head}${chipsHtml(g.bullets, cls)}</div>`;
+    }
+    return `<div class="bullet-group">${head}<ul>${(g.bullets || []).map(b => `<li>${esc(b)}</li>`).join('')}</ul></div>`;
+  }).join('');
 }
 
 function matrixHtml(matrix) {

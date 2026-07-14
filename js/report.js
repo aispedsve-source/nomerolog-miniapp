@@ -25,7 +25,96 @@ const V = (label, value) => ({ label, value: String(value) });
 const BG = (title, bullets) => ({ title, bullets: bullets || [] });
 
 /**
- * Персональная карта → StructuredReport (8 секций + сводка).
+ * «Средняя» карта — понятно и коротко: 5 карточек человеческим языком.
+ * По умолчанию показываем именно её; полный разбор — по кнопке.
+ */
+export function composeMediumReport(birth, name) {
+  const map = calculateMap(birth);
+  const cn = map.consciousness, mn = map.mission, sn = map.sphere, py = map.personalYear;
+  const num = DICT.numbers[cn];
+  const mission = DICT.missions[mn];
+  const sphere = DICT.spheres[sn];
+  const year = DICT.personalYears[py];
+  const money = DICT.money[cn];
+  const now = new Date();
+  const pMonth = calculatePersonalMonth(birth, now.getFullYear(), now.getMonth() + 1);
+  const periodM = DICT.periods[pMonth];
+
+  const sections = [];
+
+  // 1. Кто ты
+  sections.push({
+    title: `Кто ты · ${num.archetype}`,
+    subtitle: num.essence,
+    values: [V('Чего хочешь по натуре', num.wants)],
+    bulletGroups: [
+      { title: 'Твои сильные стороны', bullets: num.strengths, chips: 'gold' },
+      { title: 'Иногда мешает', bullets: num.shadows, chips: 'shadow' },
+    ],
+    badge: cn,
+  });
+
+  // 2. Миссия и где реализуешься
+  sections.push({
+    title: `Твоя миссия · ${mission.title}`,
+    subtitle: mission.essence,
+    values: [
+      V('Куда расти', `${mission.growthTitle}. ${mission.growthAdvice}`),
+      V('Где раскрываешься', sphere.constructiveVector),
+    ],
+    bulletGroups: [],
+    badge: mn,
+  });
+
+  // 3. Что сейчас
+  sections.push({
+    title: `Сейчас · ${year.title}`,
+    subtitle: `Твой личный год — ${py}. ${year.plus}`,
+    values: [
+      V('Совет на год', year.recommendation),
+      V('Этот месяц', periodM.monthFocus),
+    ],
+    bulletGroups: [],
+    badge: py,
+  });
+
+  // 4. Деньги и роли
+  sections.push({
+    title: 'Деньги и сильные роли',
+    subtitle: money.moneyChannel,
+    values: [],
+    bulletGroups: [{ title: 'Тебе идут роли', bullets: money.strongRoles, chips: 'gold' }],
+    badge: cn,
+  });
+
+  // 5. Матрица (визуально) + что наработать
+  const missing = [];
+  for (let d = 1; d <= 9; d++) if (map.matrix[d] === 0) missing.push(d);
+  const growBits = missing.slice(0, 3).map(d => `${d} — ${DICT.matrixEnergy[d].meaning}`);
+  sections.push({
+    title: 'Матрица даты',
+    subtitle: 'Какие энергии в твоей дате сильны, а каких меньше.',
+    values: growBits.length ? [V('Стоит наработать', growBits.join('; '))] : [],
+    bulletGroups: [],
+    matrix: map.matrix,
+    badge: '▦',
+  });
+
+  return {
+    title: (name && name.trim()) ? name.trim() : 'Твоя карта',
+    subtitle: 'Карта чисел',
+    meta: `Дата рождения: ${reportDate(birth)}`,
+    chips: [
+      { k: 'Ты', v: cn }, { k: 'Миссия', v: mn },
+      { k: 'Сфера', v: sn }, { k: 'Год', v: py },
+    ],
+    sections,
+    map,
+  };
+}
+
+/**
+ * Персональная карта → StructuredReport (8 секций + сводка). Полный разбор (для PDF и «Подробнее»).
  * @param {object} birth {day,month,year}
  * @param {string} [name]
  */

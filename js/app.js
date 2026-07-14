@@ -3,7 +3,7 @@ import {
   calculatePersonalMonth, calculatePersonalDay, calculateAge,
 } from './numerology.js';
 import { DICT } from './data.js';
-import { composePersonalReport } from './report.js';
+import { composePersonalReport, composeMediumReport } from './report.js';
 import * as store from './store.js';
 import * as tg from './telegram.js';
 import { renderReport, sectionCard, el, esc, chipsHtml, toast } from './render.js';
@@ -88,9 +88,9 @@ function calcCard() {
 
   state.currentBirth = parsed.value;
   state.currentName = null;
-  const report = composePersonalReport(parsed.value);
-  state.currentReport = report;
-  renderReport($('#map-results'), report, { actions: personalActions(report) });
+  const medium = composeMediumReport(parsed.value);
+  state.currentReport = medium;
+  renderReport($('#map-results'), medium, { actions: personalActions(parsed.value, null) });
   $('#map-save').style.display = '';
   $('#map-results').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
@@ -117,26 +117,25 @@ function promptName(title, def) {
   });
 }
 
-// Кнопки под личной картой: объяснить (ИИ) + поделиться + PDF
-function personalActions(report) {
+// Кнопки под картой: спросить ИИ + поделиться + PDF + сворачиваемый полный разбор
+function personalActions(birth, name) {
   const container = el('div');
   container.style.marginTop = '4px';
 
-  // ИИ: объяснить простыми словами
-  const explain = el('button', 'btn btn-primary', '🔮 Объяснить простыми словами');
+  // ИИ — заметная кнопка
+  const explain = el('button', 'btn btn-primary', '🔮 Спросить нумеролога');
   explain.style.marginBottom = '10px';
   explain.addEventListener('click', () => {
     tg.haptic('light');
-    ai.open('Объясни мою карту простыми словами: что это значит для меня и с чего начать?');
+    ai.open('Расскажи про меня подробнее и что мне сейчас важнее всего?');
   });
   container.appendChild(explain);
 
   const wrap = el('div', 'btn-row');
-
   const share = el('button', 'btn btn-ghost', '↗ Поделиться');
   share.addEventListener('click', () => {
     tg.haptic('light');
-    const text = shareTextFromReport(report);
+    const text = shareTextFromReport(composeMediumReport(birth, name));
     if (!tg.shareText(text)) {
       navigator.clipboard?.writeText(text).then(() => toast('Скопировано')).catch(() => {});
     }
@@ -151,12 +150,38 @@ function personalActions(report) {
       return;
     }
     pdf.disabled = true; pdf.textContent = 'Готовим…';
-    try { await exportReportPdf(report); tg.haptic('success'); }
+    try { await exportReportPdf(composePersonalReport(birth, name)); tg.haptic('success'); }
     catch (e) { toast('Не удалось создать PDF'); }
     finally { pdf.disabled = false; pdf.textContent = '⤓ PDF'; }
   });
   wrap.appendChild(pdf);
   container.appendChild(wrap);
+
+  // Полный разбор — по желанию, свёрнут
+  const moreBtn = el('button', 'btn btn-ghost btn-sm', 'Полный разбор ▾');
+  moreBtn.style.marginTop = '10px';
+  const fullBox = el('div');
+  fullBox.style.display = 'none';
+  let rendered = false;
+  moreBtn.addEventListener('click', () => {
+    tg.haptic('light');
+    if (fullBox.style.display === 'none') {
+      if (!rendered) {
+        rendered = true;
+        const full = composePersonalReport(birth, name);
+        full.sections.forEach((s, i) => fullBox.appendChild(sectionCard(s, s.badge != null ? s.badge : String(i + 1))));
+      }
+      fullBox.style.display = 'block';
+      moreBtn.textContent = 'Свернуть ▴';
+      fullBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } else {
+      fullBox.style.display = 'none';
+      moreBtn.textContent = 'Полный разбор ▾';
+    }
+  });
+  container.appendChild(moreBtn);
+  container.appendChild(fullBox);
+
   return container;
 }
 
@@ -164,7 +189,7 @@ function shareTextFromReport(report) {
   const lines = [report.title, report.subtitle, report.meta, ''];
   report.chips.forEach(c => lines.push(`${c.k}: ${c.v}`));
   lines.push('');
-  (report.summary || []).slice(0, 8).forEach(v => lines.push(`${v.label}: ${v.value}`));
+  (report.sections || []).slice(0, 4).forEach(s => { if (s.subtitle) lines.push(`• ${s.title}: ${s.subtitle}`); });
   lines.push('', 'Рассчитано в приложении «Нумеролог».');
   return lines.join('\n');
 }
@@ -351,9 +376,9 @@ function renderProfiles() {
 function openProfile(p) {
   state.currentBirth = p.birthDate;
   state.currentName = p.name;
-  const report = composePersonalReport(p.birthDate, p.name);
-  state.currentReport = report;
-  renderReport($('#map-results'), report, { actions: personalActions(report) });
+  const medium = composeMediumReport(p.birthDate, p.name);
+  state.currentReport = medium;
+  renderReport($('#map-results'), medium, { actions: personalActions(p.birthDate, p.name) });
   $('#birth-input').value = store.birthDateLabel(p.birthDate);
   $('#map-save').style.display = 'none';
   goto('map');
